@@ -69,21 +69,25 @@ def web_scraping_hotels(url):
 
 # Save to CSV
 def save_to_csv(df,csv_filename):
-    if not os.path.exists(csv_filename):
-        df.to_csv(csv_filename, index=False)
-        print("\nCSV file created successfully:", csv_filename)
+    try:
+        if not os.path.exists(csv_filename):
+            df.to_csv(csv_filename, index=False)
+            print("\nCSV file created successfully:", csv_filename)
 
-    else:
-        df.to_csv(csv_filename,mode ='a',index=False,header=False)
-        print(f"{csv_filename} already exists.Data appended")
-
+        else:
+            df.to_csv(csv_filename,mode ='a',index=False,header=False)
+            print(f"{csv_filename} already exists.Data appended")
+    except Exception as e:
+        print(f" Error saving CSV file: {e}")
 # Read CSV  and display
 def display_from_csv(csv_filename):
-    print("\n----- Reading data from csv file -----\n")
-    df_read = pd.read_csv(csv_filename)
-    print(df_read)
-    input("\nPress any key to continue...")
-
+    try:
+        print("\n----- Reading data from csv file -----\n")
+        df_read = pd.read_csv(csv_filename)
+        print(df_read)
+        input("\nPress any key to continue...")
+    except Exception as e:
+        print(f" Error reading data from CSV file: {e}")
 
 
 # Web scrapping of Website using the function
@@ -93,7 +97,7 @@ def main():
 
     # print(soup_1.prettify())
     # print(soup_2.prettify())
-
+   # Calling web scrapping function for the 2 website
     hotel1_details = web_scraping_hotels(url_1)
     hotel2_details = web_scraping_hotels(url_2)
 
@@ -102,10 +106,11 @@ def main():
     hotel1_details.extend(hotel2_details)
     df = pd.DataFrame(hotel1_details)
 
+ # calling the save function to save
     filename = "Hotel_Rooms_Comparison.csv"
     save_to_csv(df, filename)
 
-    # Display results
+    # Calling Display results function
     display_from_csv(filename)
 
 
