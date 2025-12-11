@@ -20,136 +20,97 @@ COURSES = {
 
 
 def validate_name(name):
-    return name.strip() != "" and not any(char.isdigit() for char in name)
+    return name.replace(" ", "").isalpha()
 
 
-def validate_year(year):
-    return year.isdigit() and len(year) == 4 and int(year) >= datetime.now().year
+def validate_year(start_year):
+    return start_year.isdigit() and len(start_year) == 4 and int(start_year) >= datetime.now().year
 
 
-def validate_month(month):
-    return month.capitalize() in VALID_MONTHS
+def validate_month(start_month):
+    return start_month.capitalize() in VALID_MONTHS
 
 
 def validate_course(choice):
     return choice in COURSES
 
 
-def validate_details(data):
+def validate_details(student_details):
     errors = {}
 
-    if not validate_name(data["name"]):
+    if not validate_name(student_details["name"]):
         errors["name"] = "Name cannot be empty and must contain no numbers."
 
-    if not data["address"].strip():
+    if not student_details["address"].strip():
         errors["address"] = "Address cannot be empty."
 
-    if not data["education"].strip():
+    if not student_details["education"].strip():
         errors["education"] = "Education field cannot be empty."
 
-    if not validate_year(data["year"]):
-        errors["year"] = "Year must be a 4-digit number >= current year."
+    if not validate_year(student_details["start_year"]):
+        errors["start_year"] = "Year must be a 4-digit number >= current year."
 
-    if not validate_month(data["month"]):
-        errors["month"] = "Month must be a valid month name (e.g., April)."
+    if not validate_month(student_details["start_month"]):
+        errors["start_month"] = "Month must be a valid month name (e.g., January)."
 
     return errors
 
 
-#SAVE
-
-def edit_details(data):
-    print("\nWhich field do you want to edit?")
-    print("1. Name")
-    print("2. Address")
-    print("3. Education Qualifications")
-    print("4. Course")
-    print("5. Start Year")
-    print("6. Start Month")
-    print("7. Everything is correct — Save")
-
-    choice = int(input("Enter option: ")).strip()
-
-    if choice == 1:
-        data["name"] = input("Enter Name: ")
-
-    elif choice == 2:
-        data["address"] = input("Enter Address: ")
-
-    elif choice == 3:
-        data["education"] = input("Enter Education Qualifications: ")
-
-    elif choice == 4:
-        print("\nSelect Course:")
-        for i, j in COURSES.items():
-            print(f"{i}. {j}")
-        c = input("Enter option (1/2/3): ").strip()
-        if validate_course(c):
-            data["course"] = COURSES[c]
-
-    elif choice == 5:
-        data["year"] = input("Enter Start Year: ")
-
-    elif choice == 6:
-        data["month"] = input("Enter Start Month: ")
-
-    elif choice == 7:
-        return "SAVE"
-
-    return data
-
-# Editing details
-
-def confirm_and_edit(data):
-    while True:
-        print("      PLEASE CONFIRM YOUR DETAILS        ")
-        for key, value in data.items():
-            print(f"{key.capitalize()}: {value}")
-
-        errors = validate_details(data)
-
-        if errors:
-            print("\nSome fields have problems:")
-            for i, j in errors.items():
-                print(f"- {i}: {j}")
-
-        # Run edit menu
-        result = edit_details(data)
-
-        if result == "SAVE":
-            # Ensure no validation errors before saving
-            errors = validate_details(data)
-            if not errors:
-                return data
-            else:
-                print("\n Cannot save — fix the errors above.")
-                continue
-        else:
-            data = result
-
 # GET USER INPUT
 
 def get_student_details():
-    data = {}
+    student_details = {}
 
     print(" DBS Student Application Form \n")
     print("-----------------------------  \n")
-    data["name"] = input(f"Enter your full name: ")
-    data["address"] = input(f"Enter your address: ")
-    data["education"] = input(f"Enter your education qualifications: ")
+    student_details["name"] = input(f"Enter your full name: ")
+    student_details["address"] = input(f"Enter your address: ")
+    student_details["education"] = input(f"Enter your education qualifications: ")
 
     print("\nSelect Course:")
     for key, value in COURSES.items():
         print(f"{key}. {value}")
 
     course_choice = input("Enter option (1/2/3): ").strip()
-    data["course"] = COURSES.get(course_choice, "MSc Cyber Security")
-    data["year"] = input("Enter intended start YEAR (e.g. 2026): ")
-    data["month"] = input("Enter intended start MONTH (e.g. April): ")
+    student_details["course"] = COURSES.get(course_choice, "MSc Cyber Security")
+    student_details["start_year"] = input("Enter intended start Year (e.g. 2026): ")
+    student_details["start_month"] = input("Enter intended start Month (e.g. April): ")
 
-    return data
+    return student_details
 
-#
+
+# Confirming details and submitting
+
+def confirm_details(student_details):
+    while True:
+        print("\n PLEASE CONFIRM YOUR DETAILS")
+        print("--------------------------------")
+        for key, value in student_details.items():
+            print(f"{key.capitalize()}: {value}")
+
+        errors = validate_details(student_details)
+
+        if errors:
+            print("Some fields are invalid:")
+            for field, msg in errors.items():
+                print(f"- {field}: {msg}")
+
+        print("\nOptions:")
+        print("1. Edit  again")
+        print("2. Save and submit")
+
+        choice = input("Enter option (1/2): ").strip()
+
+        if choice == "1":
+            student_details = get_student_details()
+        elif choice == "2":
+            if not errors:
+                return student_details
+            else:
+                print("\n Cannot save. Fix the errors first.")
+        else:
+            print("Invalid choice, try again.")
+
 # Client socket
 
 def start_client():
@@ -158,9 +119,9 @@ def start_client():
         client.connect((SERVER, PORT))
         print("\nConnected to server.\n")
 
-        #  Input + Validation + Editing
+        #  Using get_student_details function and confirm_details 
         details = get_student_details()
-        final_details = confirm_and_edit(details)
+        final_details = confirm_details(details)
        # Send JSON to server
         client.send(json.dumps(final_details).encode())
 
@@ -168,7 +129,7 @@ def start_client():
         response = client.recv(1024).decode()
         print(f"Your application reference is ", response)
 
-        client.close()
+        #client.close()
 
     except Exception as e:
         print("Error submitting details")
