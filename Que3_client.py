@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 PORT = 5050
-SERVER = "10.20.203.0"
+SERVER = "127.0.0.1"
 
 VALID_MONTHS = [
     "January", "February", "March", "April", "May", "June",
@@ -129,7 +129,7 @@ def start_client():
         response = client.recv(1024).decode()
         print(f"Your application reference is ", response)
 
-        #client.close()
+        client.close()
 
     except Exception as e:
         print("Error submitting details")
