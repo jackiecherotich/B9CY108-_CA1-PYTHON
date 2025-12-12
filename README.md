@@ -2,7 +2,7 @@
 
 ## Description
 This system allows students to apply for admission using a TCP-based
-client-server application. Student details are validated and stored in MySQL database.
+Client-server application that validates and stores student details in a MySQL database.
 
 ## Architecture
 - TCP client-server communication
